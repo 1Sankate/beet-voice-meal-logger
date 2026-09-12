@@ -1,0 +1,60 @@
+/* Visual design is not graded, so this is deliberately small: readable type,
+   one accent colour, no framework. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1b1b1b;
+  --muted: #6b6b6b;
+  --line: #e6e6e6;
+  --accent: #b5174e;
+  --card: #fafafa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141414;
+    --fg: #f1f1f1;
+    --muted: #9a9a9a;
+    --line: #2b2b2b;
+    --accent: #ff7aa8;
+    --card: #1c1c1c;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 720px; margin: 0 auto; padding: 24px 20px 64px; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+h1 { font-size: 22px; margin: 0; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 28px 0 8px; }
+.muted { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+.empty { color: var(--muted); margin-top: 32px; }
+.error { background: #ffe9ef; color: #8a0f38; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+@media (prefers-color-scheme: dark) { .error { background: #3a1220; color: #ffb3c8; } }
+
+button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--accent); border-radius: 999px; padding: 10px 18px;
+}
+button.talk { background: var(--accent); color: #fff; }
+button.stop { background: transparent; color: var(--accent); }
+
+.totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 20px; }
+.totals div { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.totals strong { display: block; font-size: 20px; }
+.totals small { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+.captions { margin-top: 20px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.captions p { margin: 6px 0; font-size: 14px; }
+.captions .agent { color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; }
+td { padding: 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.when { width: 72px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+td.macros { text-align: right; white-space: nowrap; }
+.said { color: var(--muted); font-size: 13px; font-style: italic; margin-top: 2px; }

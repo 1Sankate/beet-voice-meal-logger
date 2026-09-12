@@ -1,0 +1,21 @@
+{
+  "name": "beet-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The page that shows what the user said they ate.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173"
+  },
+  "dependencies": {
+    "livekit-client": "^2.9.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7"
+  }
+}

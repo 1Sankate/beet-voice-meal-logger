@@ -1,0 +1,24 @@
+{
+  "name": "beet-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Beet meal-logging API. Owns the food catalogue, the meal log and all nutrition math.",
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test --test-concurrency=1 \"tests/*.test.js\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "livekit-server-sdk": "^2.9.7",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.4",
+    "supertest": "^7.0.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "beet-voice-meal-logger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Voice agent that logs meals — LiveKit agent, Express/Mongo API, React page.",
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix web install",
+    "dev:api": "npm --prefix server run dev",
+    "dev:web": "npm --prefix web run dev",
+    "dev:agent": "cd agent && uv run python agent.py dev",
+    "test": "npm --prefix server test",
+    "test:agent": "cd agent && uv run --group dev pytest -q"
+  }
+}

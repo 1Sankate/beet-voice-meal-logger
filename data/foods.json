@@ -1,0 +1,223 @@
+{
+  "_meta": {
+    "description": "Beet food database (subset). This is the source of truth for all nutrition values. Macros are per 100g of the dish as served. Every food lists the household units it can be logged in, with the gram weight of one such unit.",
+    "macroUnits": {
+      "calories": "kcal per 100g",
+      "protein": "g per 100g",
+      "carbs": "g per 100g",
+      "fat": "g per 100g"
+    }
+  },
+  "foods": [
+    {
+      "id": "roti",
+      "name": "Roti",
+      "aliases": ["chapati", "phulka", "wheat roti"],
+      "macrosPer100g": { "calories": 297, "protein": 11.2, "carbs": 58.0, "fat": 3.7 },
+      "units": [{ "name": "piece", "grams": 40 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "plain_rice",
+      "name": "Plain Rice (cooked)",
+      "aliases": ["rice", "steamed rice", "chawal"],
+      "macrosPer100g": { "calories": 130, "protein": 2.7, "carbs": 28.0, "fat": 0.3 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "plate", "grams": 300 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "dal_tadka",
+      "name": "Dal Tadka",
+      "aliases": ["dal", "daal", "yellow dal", "tadka dal"],
+      "macrosPer100g": { "calories": 120, "protein": 6.0, "carbs": 14.0, "fat": 4.5 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "rajma",
+      "name": "Rajma Curry",
+      "aliases": ["rajma", "kidney bean curry"],
+      "macrosPer100g": { "calories": 140, "protein": 7.0, "carbs": 18.0, "fat": 4.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "chole",
+      "name": "Chole",
+      "aliases": ["chana masala", "chickpea curry", "chhole"],
+      "macrosPer100g": { "calories": 160, "protein": 7.5, "carbs": 20.0, "fat": 5.5 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "paneer_butter_masala",
+      "name": "Paneer Butter Masala",
+      "aliases": ["paneer makhani", "butter paneer"],
+      "macrosPer100g": { "calories": 230, "protein": 9.0, "carbs": 8.0, "fat": 18.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "palak_paneer",
+      "name": "Palak Paneer",
+      "aliases": ["spinach paneer"],
+      "macrosPer100g": { "calories": 180, "protein": 8.0, "carbs": 6.0, "fat": 14.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "curd",
+      "name": "Curd",
+      "aliases": ["dahi", "yogurt", "plain curd"],
+      "macrosPer100g": { "calories": 61, "protein": 3.5, "carbs": 4.7, "fat": 3.3 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "glass", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "milk_toned",
+      "name": "Toned Milk",
+      "aliases": ["milk", "doodh"],
+      "macrosPer100g": { "calories": 58, "protein": 3.2, "carbs": 4.8, "fat": 3.0 },
+      "units": [{ "name": "glass", "grams": 200 }, { "name": "cup", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "chai",
+      "name": "Chai (with sugar)",
+      "aliases": ["tea", "milk tea", "chaay"],
+      "macrosPer100g": { "calories": 70, "protein": 1.7, "carbs": 8.0, "fat": 3.0 },
+      "units": [{ "name": "cup", "grams": 150 }, { "name": "glass", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "idli",
+      "name": "Idli",
+      "aliases": ["idly"],
+      "macrosPer100g": { "calories": 130, "protein": 4.0, "carbs": 26.0, "fat": 0.5 },
+      "units": [{ "name": "piece", "grams": 40 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "dosa",
+      "name": "Plain Dosa",
+      "aliases": ["dosa", "sada dosa"],
+      "macrosPer100g": { "calories": 190, "protein": 4.0, "carbs": 30.0, "fat": 6.0 },
+      "units": [{ "name": "piece", "grams": 80 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "sambar",
+      "name": "Sambar",
+      "aliases": ["sambhar"],
+      "macrosPer100g": { "calories": 60, "protein": 3.0, "carbs": 8.0, "fat": 2.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "coconut_chutney",
+      "name": "Coconut Chutney",
+      "aliases": ["chutney", "nariyal chutney"],
+      "macrosPer100g": { "calories": 200, "protein": 3.5, "carbs": 7.0, "fat": 18.0 },
+      "units": [{ "name": "tablespoon", "grams": 15 }, { "name": "katori", "grams": 60 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "poha",
+      "name": "Poha",
+      "aliases": ["pohe", "flattened rice"],
+      "macrosPer100g": { "calories": 150, "protein": 3.0, "carbs": 26.0, "fat": 4.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "plate", "grams": 250 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "upma",
+      "name": "Upma",
+      "aliases": ["uppuma"],
+      "macrosPer100g": { "calories": 160, "protein": 4.0, "carbs": 24.0, "fat": 5.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "plate", "grams": 250 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "aloo_paratha",
+      "name": "Aloo Paratha",
+      "aliases": ["potato paratha"],
+      "macrosPer100g": { "calories": 260, "protein": 6.0, "carbs": 34.0, "fat": 11.0 },
+      "units": [{ "name": "piece", "grams": 100 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "plain_paratha",
+      "name": "Plain Paratha",
+      "aliases": ["paratha", "parantha"],
+      "macrosPer100g": { "calories": 300, "protein": 7.0, "carbs": 38.0, "fat": 13.0 },
+      "units": [{ "name": "piece", "grams": 80 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "omelette",
+      "name": "Egg Omelette",
+      "aliases": ["omelet", "anda omelette"],
+      "macrosPer100g": { "calories": 180, "protein": 12.0, "carbs": 1.5, "fat": 14.0 },
+      "units": [{ "name": "piece", "grams": 100 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "boiled_egg",
+      "name": "Boiled Egg",
+      "aliases": ["egg", "anda", "uble ande"],
+      "macrosPer100g": { "calories": 155, "protein": 13.0, "carbs": 1.1, "fat": 11.0 },
+      "units": [{ "name": "piece", "grams": 50 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "chicken_curry",
+      "name": "Chicken Curry",
+      "aliases": ["chicken gravy", "murgh curry"],
+      "macrosPer100g": { "calories": 190, "protein": 16.0, "carbs": 5.0, "fat": 12.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "tandoori_chicken",
+      "name": "Tandoori Chicken",
+      "aliases": ["grilled chicken", "tandoori"],
+      "macrosPer100g": { "calories": 190, "protein": 27.0, "carbs": 2.0, "fat": 8.0 },
+      "units": [{ "name": "piece", "grams": 100 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "fish_curry",
+      "name": "Fish Curry",
+      "aliases": ["machli curry", "fish gravy"],
+      "macrosPer100g": { "calories": 150, "protein": 15.0, "carbs": 4.0, "fat": 8.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "mixed_veg_sabzi",
+      "name": "Mixed Vegetable Sabzi",
+      "aliases": ["mix veg", "sabzi", "mixed veg"],
+      "macrosPer100g": { "calories": 110, "protein": 3.0, "carbs": 12.0, "fat": 6.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "bhindi_masala",
+      "name": "Bhindi Masala",
+      "aliases": ["bhindi", "okra sabzi", "lady finger"],
+      "macrosPer100g": { "calories": 120, "protein": 2.5, "carbs": 10.0, "fat": 8.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "khichdi",
+      "name": "Khichdi",
+      "aliases": ["khichri", "dal khichdi"],
+      "macrosPer100g": { "calories": 120, "protein": 4.0, "carbs": 19.0, "fat": 3.0 },
+      "units": [{ "name": "katori", "grams": 150 }, { "name": "bowl", "grams": 200 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "chicken_biryani",
+      "name": "Chicken Biryani",
+      "aliases": ["biryani", "biriyani"],
+      "macrosPer100g": { "calories": 200, "protein": 9.0, "carbs": 24.0, "fat": 8.0 },
+      "units": [{ "name": "plate", "grams": 300 }, { "name": "katori", "grams": 150 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "banana",
+      "name": "Banana",
+      "aliases": ["kela"],
+      "macrosPer100g": { "calories": 89, "protein": 1.1, "carbs": 22.8, "fat": 0.3 },
+      "units": [{ "name": "piece", "grams": 120 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "aliases": ["seb"],
+      "macrosPer100g": { "calories": 52, "protein": 0.3, "carbs": 14.0, "fat": 0.2 },
+      "units": [{ "name": "piece", "grams": 180 }, { "name": "gram", "grams": 1 }]
+    },
+    {
+      "id": "almonds",
+      "name": "Almonds",
+      "aliases": ["badam"],
+      "macrosPer100g": { "calories": 579, "protein": 21.0, "carbs": 22.0, "fat": 50.0 },
+      "units": [{ "name": "piece", "grams": 1.2 }, { "name": "handful", "grams": 20 }, { "name": "gram", "grams": 1 }]
+    }
+  ]
+}
