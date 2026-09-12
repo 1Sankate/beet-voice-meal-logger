@@ -34,7 +34,7 @@ npm run dev:agent   # the LiveKit agent (uv installs Python 3.12 + deps on first
 
 Open <http://localhost:5173>, click **Talk to Beet**, allow the mic, and start talking.
 
-**Without a mic, or without LiveKit:** `cd agent && uv run python agent.py console` gives you the same agent in your terminal. The API and page work on their own — the agent is just another API client.
+**Without the browser:** `cd agent && uv run python agent.py console` talks to the same agent from your terminal, using your machine's mic and speakers (it still needs the LiveKit keys — speech and the LLM are served through LiveKit Inference). The API and the page work with no LiveKit at all; the agent is just another API client.
 
 ### About the database
 
