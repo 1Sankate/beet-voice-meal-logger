@@ -11,7 +11,7 @@ export function createApp() {
   app.use(cors());
   app.use(express.json({ limit: '100kb' }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'beet-server' }));
+  app.get(['/health', '/api/health'], (_req, res) => res.json({ ok: true, service: 'beet-server' }));
   app.use('/api/foods', foodsRouter);
   app.use('/api/meals', mealsRouter);
   app.use('/api/livekit', livekitRouter);
