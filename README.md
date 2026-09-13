@@ -2,6 +2,12 @@
 
 Talk to it, and what you ate shows up on the page with the right nutrition attached.
 
+## Try it live
+
+**https://beet-voice-meal-logger-6vpj.vercel.app** — click **Talk to Beet**, allow the microphone, and say what you ate.
+
+> The API runs on Render's free tier, which sleeps after 15 minutes idle. If the page shows no meals for a moment, the first request is waking it (up to ~50 s). Opening <https://beet-api-ibq4.onrender.com/api/health> first avoids the wait. It is a single shared demo log with no login — see [what's incomplete](#whats-incomplete-and-what-id-do-differently).
+
 ```
 "I had two rotis and a katori of dal for lunch."   -> two entries, 418 kcal
 "Actually make that three rotis."                  -> same entry, now 356 kcal
@@ -16,11 +22,15 @@ Talk to it, and what you ate shows up on the page with the right nutrition attac
 
 ## Run it from an empty machine
 
-**You need:** [Node 20+](https://nodejs.org), [uv](https://docs.astral.sh/uv/getting-started/installation/) (installs Python for you), and a free [LiveKit Cloud](https://cloud.livekit.io) project. No MongoDB install, no credit card.
+**You need:** [Git](https://git-scm.com/downloads), [Node 20+](https://nodejs.org), [uv](https://docs.astral.sh/uv/getting-started/installation/) (installs Python 3.12 for you), and a free [LiveKit Cloud](https://cloud.livekit.io) project. No MongoDB install, no credit card.
+
+**LiveKit keys:** in the LiveKit Cloud dashboard, open your project → **Settings → API keys → Create key**. Copy the WebSocket URL, API key and API secret (the secret is shown once).
 
 ```bash
-git clone <this repo> && cd beet-voice-meal-logger
-cp .env.example .env            # then paste your LIVEKIT_URL / KEY / SECRET
+git clone https://github.com/1Sankate/beet-voice-meal-logger.git
+cd beet-voice-meal-logger
+cp .env.example .env            # Windows PowerShell: copy .env.example .env
+                                # then fill in LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET
 npm run setup                   # installs server + web
 ```
 
@@ -39,6 +49,27 @@ Open <http://localhost:5173>, click **Talk to Beet**, allow the mic, and start t
 ### About the database
 
 `MONGODB_URI` empty (the default) starts an embedded `mongod` with an on-disk data directory at `server/.data/mongo`, downloaded automatically on first run. Logs survive restarts. Point `MONGODB_URI` at Atlas or your own `mongod` for anything beyond a laptop demo — nothing else changes.
+
+---
+
+## How it is deployed
+
+Each piece goes where it runs best; none of them needs a paid plan.
+
+| Piece | Host | Why there | Config |
+|---|---|---|---|
+| Web page | **Vercel** (project root `web/`) | static Vite build | `VITE_API_URL=https://beet-api-ibq4.onrender.com` — without it the page calls `/api` on Vercel and finds nothing |
+| API | **Render** free web service | needs a long-lived process: the SSE stream and the in-memory change emitter don't survive serverless functions | [`render.yaml`](render.yaml) blueprint; secrets `MONGODB_URI`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` set in the dashboard |
+| Voice agent | **LiveKit Cloud** (region `ap-south`) | it's a persistent worker connected to LiveKit, not a request handler; same project as the rooms, so audio stays close | [`agent/Dockerfile`](agent/Dockerfile) + [`agent/livekit.toml`](agent/livekit.toml); secret `BEET_API_URL` points it at Render |
+| Database | **MongoDB Atlas** | managed Mongo; Network Access allows `0.0.0.0/0` because Render's egress IPs aren't fixed | — |
+
+Redeploying: a push to `main` rebuilds Vercel and Render automatically. The agent is redeployed explicitly from `agent/`:
+
+```bash
+lk agent deploy        # uses livekit.toml; LIVEKIT_URL / KEY / SECRET from the environment
+```
+
+Checked after deploying: API health, all 30 foods, meals read from Atlas, LiveKit token issuance, CORS from the Vercel origin, and the SSE stream held open 40 s through Render with a keep-alive ping and no drops. The page was measured at ~0.5 s to DOMContentLoaded with a 49 kB (gzip) entry bundle — `livekit-client` is lazy-loaded when a call starts rather than on page load. The cloud agent registered, took real calls, and wrote to Atlas through the Render API.
 
 ---
 
@@ -154,7 +185,10 @@ What I deliberately did not test: the prompt itself, and LiveKit's audio pipelin
 
 ## What's incomplete, and what I'd do differently
 
-- **No auth.** Everything is `demo-user` unless a `userId` is passed. The scoping is real (queries and deletes are per-user, with a test), the identity is not — a real deployment needs the user id to come from a verified token, not from a room name.
+- **No auth — and the live URL is public.** Everything is `demo-user` unless a `userId` is passed. The scoping is real (queries and deletes are per-user, with a test), the identity is not — a real deployment needs the user id to come from a verified token, not from a room name. On the deployed site this means every visitor shares one meal log, and anyone with the URL can mint LiveKit tokens (spending the project's free minutes) and write to the database. Acceptable for a short-lived review demo; I'd take it down afterwards.
+- **The deployed API is slow-ish from India.** Render's free tier sleeps after 15 minutes (first request up to ~50 s) and the service is in a US region, so a warm `/api/meals` round trip is ~0.55 s and occasionally over 1 s. Moving to Render's Singapore region would cut that substantially; it means a new service and URL, which I didn't do this close to the deadline.
+- **Production agent logs are INFO-level.** Tool calls (`executing tool …`) are logged at DEBUG, so `lk agent logs` on the deployed agent shows sessions and warnings but not which tools the model chose. Locally in `dev` mode they're visible — that's how the edit bug below was found. A structured log line per tool call would make the deployed agent debuggable the same way.
+- **The first reply of each call has a ~0.5 s stall.** LiveKit's watchdog logs the event loop blocked while lazily importing `openai` types on the first LLM turn. Importing them in a prewarm hook would move that cost to worker start.
 - **Timezone is the server's local time.** "Today" and "this morning" are computed with local `Date` boundaries, which is correct when the server runs in the user's timezone and wrong otherwise. The fix is storing a timezone per user and doing day maths with `Intl` — a real change, not a config flag, so I left it honest rather than half-done.
 - **Relative time is coarse.** "Yesterday's dinner" is not parsed; the agent only edits and deletes within today. `GET /api/meals?date=` already supports any day, so this is a prompt-and-tool gap, not a data one.
 - **Ambiguous *entries* still need a human question.** If you logged the same dish twice in one meal and say "remove the dal", the agent asks which one rather than picking. Correct, but clunkier than a product would ship.
@@ -162,7 +196,7 @@ What I deliberately did not test: the prompt itself, and LiveKit's audio pipelin
 - **Speech recognition still mishears.** Key terms helped, but a noisy room still produces things like "pituitary" (the agent asked to repeat, rather than guessing) or picks up nearby Hindi conversation. The key-term list is hand-picked from `foods.json`; it should be generated from the catalogue so it can't drift.
 - **The meal is inferred from the clock when not stated.** "I had chai today" at 11:30 lands under lunch. It's said aloud in the confirmation, but "this morning" or "for breakfast" is what gets it right.
 - **`agent.py dev` is deprecated** in `livekit-agents` 1.8 in favour of `lk agent dev` from the LiveKit CLI. It still works; the npm script uses it so the setup doesn't require installing another CLI.
-- **The live-sync fix is dev-only.** It lives in the Vite proxy. A production build served behind a different proxy (nginx, a PaaS router) needs the same "close the client when upstream dies" behaviour checked there.
+- **The live-sync proxy fix is dev-only, by design.** It lives in the Vite proxy. In production the page opens `EventSource` directly against Render (no proxy in between), so a dropped API connection errors normally and the `ready` refetch catches up; the stream was held open 40 s through Render without drops. Serving the page and API behind a shared proxy (nginx, a PaaS router) would need that behaviour re-checked.
 - **Deletes are hard deletes.** A soft-delete flag would let "undo that" work, which is an obvious next thing a voice product wants.
 - **One agent, one room.** No load testing, no multi-region, no reconnect story beyond LiveKit's own.
 - **The embedded mongod is a convenience, not a deployment.** It exists so this repo runs on a clean machine in one command. Anything real sets `MONGODB_URI`.
@@ -179,6 +213,11 @@ server/                Express + Mongoose API
   src/services/        meal-log business rules (the only writer)
   src/routes/          transport
   tests/               34 tests
-web/                   React + Vite page, live over SSE
+web/                   React + Vite page, live over SSE (deployed on Vercel)
 agent/                 LiveKit voice agent + its tools
+  Dockerfile           image for LiveKit Cloud
+  livekit.toml         which LiveKit Cloud agent `lk agent deploy` targets
+  tests/               18 tests
+render.yaml            Render blueprint for the API
+.env.example           local settings, with where each comes from (VITE_API_URL is set on Vercel only)
 ```
