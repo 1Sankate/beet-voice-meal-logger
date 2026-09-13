@@ -81,6 +81,10 @@ The agent never computes nutrition and never invents a dish. It parses speech in
 
 **The page survives the API going away.** The server sends a `ready` event on every stream connect, and the page refetches on it as well as on `meals` — so anything written while the page was disconnected shows up the moment it reconnects. In dev, the Vite proxy needed one line for this to work at all: when the API died, the proxy logged `ECONNRESET` but left the browser's `/api/stream` socket hanging open, so `EventSource` never errored, never reconnected, and the page went silently stale until a manual reload. `web/vite.config.js` now destroys the client socket on proxy error. Found by restarting the API with the page open and logging a meal during the gap; verified by repeating it with the fix (page caught up with no reload).
 
+**A failed microphone leaves the room.** One session reached the agent but never delivered audio: the agent log showed it joined and waited, with no `start reading stream … SOURCE_MICROPHONE` line, and never greeted. `voice.js` connected to the room and *then* enabled the mic, and if the second step threw, the page showed an error but stayed connected — leaving the agent sitting in a silent room. It now disconnects on failure and surfaces "Could not start the microphone: …".
+
+**Captions update in place.** LiveKit sends each interim version of a sentence as a new text stream sharing one `lk.segment_id`. Keying captions on the stream id stacked "You: Ahead of the / You: Ahead of the box chai today / …" as separate lines; keying on the segment id replaces the line.
+
 **Room names carry the user.** The token endpoint mints `beet__<userId>__<random>`; the agent parses the user out of the room name it was dispatched into. That is enough to scope the log per user without an auth system this assignment doesn't need. Every meal query is scoped by `userId` and there is a test that one user cannot delete another's entry.
 
 ### API
@@ -101,6 +105,15 @@ Errors are always `{ error: { code, message, ...context } }`. The `message` is w
 ### The agent's tools
 
 `find_food` · `log_meal` · `list_todays_meals` · `update_meal` · `delete_meal` — each one an HTTP call, each returning a short spoken-English string. Tool failures return a sentence explaining what went wrong rather than raising, so the model can recover in-conversation ("Not logged. 'paneer' could be Paneer Butter Masala or Palak Paneer. Ask the user which one.") instead of apologising vaguely.
+
+**The prompt was tuned from real call logs, not guesses.** LiveKit already logs every tool call at DEBUG (`executing tool {"function": ..., "arguments": ...}`), so after the first voice sessions I read back what the model actually did. Two things were wrong:
+
+- `update_meal` had **never** been called. "Actually make that three rotis" was handled as a second `log_meal` — a duplicate that only looked right because other entries happened to get deleted. The model had been holding items back until it felt the user was done, so there was nothing to edit yet. The prompt now says to log a dish as soon as it's named, and that a correction to something already logged is `update_meal` on that entry, never another `log_meal`.
+- "Remove everything" deleted five entries with no confirmation. The prompt now requires naming the entries and asking before deleting more than one.
+
+After the change, a retest by voice showed "increase tandoori chicken by two more" → `list_todays_meals` → `update_meal(quantity=3)`, then "my bad, remove one" → `update_meal(quantity=2)`, and "delete all of them" → the agent listed four entries and asked before deleting. Unit tests can't catch this class of bug — the tools were correct, the model just wasn't choosing them — which is why reading the logs from real calls mattered.
+
+**Speech-to-text gets the catalogue's vocabulary.** Deepgram was hearing "katori" as *kandori / ketori / Kettuya*, "dal" as *Taal / Dai / dadi*, and "two chapatis" as *Sweet Chabadis*, which sent the agent into repeated `find_food` lookups. `agent.py` passes 35 dish names and units from `foods.json` as Deepgram `keyterm` hints through LiveKit Inference's `extra_kwargs`.
 
 ---
 
@@ -129,6 +142,11 @@ Verified by hand in a browser, because these are about the running system rather
 | killed and restarted the API, logged a meal as soon as it was up | page reconnected and showed it with no reload |
 | restarted the API process, re-read the log | same entries, same ids — the on-disk embedded Mongo persists |
 | clicked "Talk to Beet" with no LiveKit keys | clear message naming the three env vars, not a crash |
+| by voice: "chicken burger" | "Did you mean Chicken Curry, Tandoori Chicken, or Chicken Biryani?" — nothing logged |
+| by voice: "tandoori chicken", then "increase it by two more", then "my bad, remove one" | one entry, `update_meal` twice: 3 pieces (570 kcal), then 2 pieces (380 kcal) |
+| by voice: "delete all of them" | agent listed four entries and asked; deleted only after "yep" |
+| by voice: "I had pizza" | "Beet does not have pizza yet" — nothing logged |
+| by voice: "dal", then "two rotis and a katori of rice" | three entries, 613 kcal; the page and MongoDB Atlas agreed |
 
 What I deliberately did not test: the prompt itself, and LiveKit's audio pipeline. Prompt behaviour is not stable enough to assert on in a unit test, and testing LiveKit would be testing LiveKit. The seam I *can* pin down — every tool call and everything downstream of it — is covered.
 
@@ -141,6 +159,9 @@ What I deliberately did not test: the prompt itself, and LiveKit's audio pipelin
 - **Relative time is coarse.** "Yesterday's dinner" is not parsed; the agent only edits and deletes within today. `GET /api/meals?date=` already supports any day, so this is a prompt-and-tool gap, not a data one.
 - **Ambiguous *entries* still need a human question.** If you logged the same dish twice in one meal and say "remove the dal", the agent asks which one rather than picking. Correct, but clunkier than a product would ship.
 - **The quote under an edited entry is stale.** `spokenAs` records the words that *created* the entry, and `update_meal` doesn't send new wording — so after "make that three rotis" the page shows `3 × piece` under the quote "two rotis". The numbers are right; the quote is history. Either update it on edit or label it "originally said".
+- **Speech recognition still mishears.** Key terms helped, but a noisy room still produces things like "pituitary" (the agent asked to repeat, rather than guessing) or picks up nearby Hindi conversation. The key-term list is hand-picked from `foods.json`; it should be generated from the catalogue so it can't drift.
+- **The meal is inferred from the clock when not stated.** "I had chai today" at 11:30 lands under lunch. It's said aloud in the confirmation, but "this morning" or "for breakfast" is what gets it right.
+- **`agent.py dev` is deprecated** in `livekit-agents` 1.8 in favour of `lk agent dev` from the LiveKit CLI. It still works; the npm script uses it so the setup doesn't require installing another CLI.
 - **The live-sync fix is dev-only.** It lives in the Vite proxy. A production build served behind a different proxy (nginx, a PaaS router) needs the same "close the client when upstream dies" behaviour checked there.
 - **Deletes are hard deletes.** A soft-delete flag would let "undo that" work, which is an obvious next thing a voice product wants.
 - **One agent, one room.** No load testing, no multi-region, no reconnect story beyond LiveKit's own.
