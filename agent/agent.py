@@ -33,6 +33,14 @@ load_dotenv(".env.local", override=True)
 
 logger = logging.getLogger("beet-agent")
 
+STT_KEYTERMS = [
+    "katori", "roti", "chapati", "phulka", "dal", "daal", "tadka", "chawal", "rajma",
+    "chole", "paneer", "palak paneer", "paneer butter masala", "dahi", "doodh", "chai",
+    "idli", "dosa", "sambar", "chutney", "poha", "upma", "aloo paratha", "paratha",
+    "anda", "omelette", "tandoori chicken", "machli", "sabzi", "bhindi", "khichdi",
+    "biryani", "kela", "seb", "badam",
+]
+
 INSTRUCTIONS = """
 You are Beet's meal-logging assistant. You talk to the user by voice, so keep
 every reply to one or two short spoken sentences. Never use markdown, emoji,
@@ -48,8 +56,15 @@ Rules you must follow:
   separate log_meal calls.
 - If the user does not say a quantity, assume one. If they do not say a unit,
   leave it out and let the database pick the normal serving.
+- Log a dish as soon as the user has named it. Do not hold it back waiting for
+  more detail, so that a later correction has an entry to change.
+- A correction to something already logged ("actually make that three rotis",
+  "no, it was dinner") is an edit: call update_meal on that entry. Never call
+  log_meal again for it, because that creates a duplicate.
 - To edit or delete, first call list_todays_meals to find the entry, then use
   the exact entry id it returns. Never invent an id and never read an id aloud.
+- Before deleting more than one entry at once, say which ones and ask the user
+  to confirm.
 - If the user is vague about which entry they mean and there is more than one
   match, ask a short question instead of guessing.
 - After a successful log, edit or delete, confirm in one short sentence and
@@ -243,7 +258,15 @@ async def entrypoint(ctx: JobContext) -> None:
     ctx.add_shutdown_callback(client.aclose)
 
     session = AgentSession(
-        stt=inference.STT(os.getenv("BEET_STT_MODEL", "deepgram/nova-3"), language="multi"),
+        stt=inference.STT(
+            os.getenv("BEET_STT_MODEL", "deepgram/nova-3"),
+            language="multi",
+            # Hindi food words and household units were being heard as
+            # "kandori", "Taal", "Sweet Chabadis"; key-term prompting biases
+            # recognition toward them. ponytail: hand-picked from foods.json,
+            # regenerate if the catalogue grows.
+            extra_kwargs={"keyterm": STT_KEYTERMS},
+        ),
         llm=inference.LLM(os.getenv("BEET_LLM_MODEL", "openai/gpt-4.1-mini")),
         tts=inference.TTS(os.getenv("BEET_TTS_MODEL", "cartesia/sonic-3")),
         turn_handling=TurnHandlingOptions(turn_detection=inference.TurnDetector()),

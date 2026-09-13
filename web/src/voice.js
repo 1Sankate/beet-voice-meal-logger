@@ -29,19 +29,28 @@ export async function startVoiceSession({ userId = 'demo-user', onState, onTrans
     }
   });
 
-  await room.connect(data.url, data.token);
-  await room.localParticipant.setMicrophoneEnabled(true);
+  try {
+    await room.connect(data.url, data.token);
+    await room.localParticipant.setMicrophoneEnabled(true);
+  } catch (err) {
+    // Without this the page shows an error but stays in the room, so the agent
+    // sits in a call that has no microphone and never speaks.
+    await room.disconnect();
+    throw new Error(`Could not start the microphone: ${err.message}`);
+  }
 
   // Live captions for both sides of the conversation.
   room.registerTextStreamHandler('lk.transcription', async (reader, participant) => {
     const speaker = participant.identity === data.identity ? 'you' : 'agent';
-    // Streams arrive in pieces; each piece extends the same caption line.
+    // Each interim update of the same sentence arrives as a new stream sharing
+    // one lk.segment_id; keying on it replaces the line instead of repeating it.
+    const id = reader.info.attributes?.['lk.segment_id'] ?? reader.info.id;
     let text = '';
     for await (const chunk of reader) {
       text += chunk;
-      onTranscript?.({ id: reader.info.id, speaker, text, final: false });
+      onTranscript?.({ id, speaker, text, final: false });
     }
-    onTranscript?.({ id: reader.info.id, speaker, text, final: true });
+    onTranscript?.({ id, speaker, text, final: true });
   });
 
   return {
