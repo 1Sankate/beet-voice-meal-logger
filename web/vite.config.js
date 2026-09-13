@@ -9,7 +9,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: api, changeOrigin: true },
+      '/api': {
+        target: api,
+        changeOrigin: true,
+        // When the API dies, the proxy otherwise leaves the browser's
+        // /api/stream hanging open, so EventSource never reconnects and the
+        // page goes stale. Closing the socket makes it reconnect and refetch.
+        configure: (proxy) => proxy.on('error', (_err, _req, res) => res.destroy?.()),
+      },
     },
   },
 });

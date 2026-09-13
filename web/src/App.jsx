@@ -28,6 +28,9 @@ export default function App() {
   useEffect(() => {
     refresh();
     const events = new EventSource('/api/stream');
+    // `ready` fires on every (re)connect, so writes made while the stream was
+    // down still show up.
+    events.addEventListener('ready', refresh);
     events.addEventListener('meals', refresh);
     return () => events.close();
   }, [refresh]);
