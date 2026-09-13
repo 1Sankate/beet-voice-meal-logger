@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { startVoiceSession } from './voice.js';
 
 const USER_ID = 'demo-user';
 // Empty in dev (Vite proxies /api); set VITE_API_URL when the API is hosted elsewhere.
@@ -41,6 +40,9 @@ export default function App() {
     setError('');
     setStatus('connecting');
     try {
+      // livekit-client is most of the bundle; load it only when a call starts
+      // so the meal list renders without waiting for it.
+      const { startVoiceSession } = await import('./voice.js');
       sessionRef.current = await startVoiceSession({
         userId: USER_ID,
         onState: setStatus,
