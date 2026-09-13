@@ -14,7 +14,6 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY . .
 RUN uv sync --locked --no-dev
 
-# Bake in model files (local turn-detector fallback) so cold starts don't download them.
-RUN uv run --no-dev python agent.py download-files
-
+# No download-files step: models run through LiveKit Inference and the agent
+# uses no livekit.plugins packages, so there is nothing to pre-fetch.
 CMD ["uv", "run", "--no-dev", "python", "agent.py", "start"]
