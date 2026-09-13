@@ -1,0 +1,26 @@
+# Render blueprint for the Beet API. New > Blueprint > pick this repo.
+# The web page (Vercel) and the voice agent (LiveKit Cloud) are deployed separately.
+services:
+  - type: web
+    name: beet-api
+    runtime: node
+    plan: free
+    rootDir: server
+    # Dev deps include mongodb-memory-server, which would download a mongod
+    # binary; production always uses MONGODB_URI.
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGODB_DB
+        value: beet
+      - key: MONGODB_URI
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

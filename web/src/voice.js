@@ -8,7 +8,8 @@ import { Room, RoomEvent, Track } from 'livekit-client';
  * this is all three without taking on a UI framework's opinions.
  */
 export async function startVoiceSession({ userId = 'demo-user', onState, onTranscript }) {
-  const res = await fetch(`/api/livekit/token?userId=${encodeURIComponent(userId)}`);
+  const api = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? '';
+  const res = await fetch(`${api}/api/livekit/token?userId=${encodeURIComponent(userId)}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error?.message || 'could not get a LiveKit token');
 

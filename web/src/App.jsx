@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { startVoiceSession } from './voice.js';
 
 const USER_ID = 'demo-user';
+// Empty in dev (Vite proxies /api); set VITE_API_URL when the API is hosted elsewhere.
+const API = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? '';
 const MEAL_ORDER = ['breakfast', 'lunch', 'snack', 'dinner'];
 
 const time = (iso) =>
@@ -18,7 +20,7 @@ export default function App() {
   const sessionRef = useRef(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch(`/api/meals?userId=${USER_ID}`);
+    const res = await fetch(`${API}/api/meals?userId=${USER_ID}`);
     if (res.ok) setDay(await res.json());
   }, []);
 
@@ -27,7 +29,7 @@ export default function App() {
   // what is on screen is always what is in the database.
   useEffect(() => {
     refresh();
-    const events = new EventSource('/api/stream');
+    const events = new EventSource(`${API}/api/stream`);
     // `ready` fires on every (re)connect, so writes made while the stream was
     // down still show up.
     events.addEventListener('ready', refresh);
