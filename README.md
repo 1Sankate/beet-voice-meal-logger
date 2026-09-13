@@ -79,6 +79,8 @@ The agent never computes nutrition and never invents a dish. It parses speech in
 
 **The page re-reads instead of patching.** Every write emits on an `EventEmitter` that feeds `GET /api/stream` (SSE). The page's only reaction to an event is to refetch the day, so what is on screen cannot drift from what is in the database. One-way traffic, ~20 lines, no websocket layer.
 
+**The page survives the API going away.** The server sends a `ready` event on every stream connect, and the page refetches on it as well as on `meals` — so anything written while the page was disconnected shows up the moment it reconnects. In dev, the Vite proxy needed one line for this to work at all: when the API died, the proxy logged `ECONNRESET` but left the browser's `/api/stream` socket hanging open, so `EventSource` never errored, never reconnected, and the page went silently stale until a manual reload. `web/vite.config.js` now destroys the client socket on proxy error. Found by restarting the API with the page open and logging a meal during the gap; verified by repeating it with the fix (page caught up with no reload).
+
 **Room names carry the user.** The token endpoint mints `beet__<userId>__<random>`; the agent parses the user out of the room name it was dispatched into. That is enough to scope the log per user without an auth system this assignment doesn't need. Every meal query is scoped by `userId` and there is a test that one user cannot delete another's entry.
 
 ### API
@@ -117,6 +119,17 @@ What I chose to test, and why:
 - **`agent/tests/test_tools.py`** — the tool layer against a stubbed API. The point is that a failure never becomes "saved it": unreachable API, unknown dish, ambiguous dish and bad unit each have a test on the exact sentence the user hears.
 - **`agent/tests/test_live_api.py`** — the same tools against a running backend, proving the agent-to-database path end to end. Skipped automatically when the API is not up.
 
+Verified by hand in a browser, because these are about the running system rather than any one function:
+
+| did | saw |
+|---|---|
+| logged 2 rotis + 1 katori dal + 1 cup chai via the API with the page open | all three appeared without reload, grouped by meal, 523 kcal |
+| edited roti to 3 | `3 × piece (120 g)`, 356 kcal |
+| deleted chai | gone, total 536 kcal |
+| killed and restarted the API, logged a meal as soon as it was up | page reconnected and showed it with no reload |
+| restarted the API process, re-read the log | same entries, same ids — the on-disk embedded Mongo persists |
+| clicked "Talk to Beet" with no LiveKit keys | clear message naming the three env vars, not a crash |
+
 What I deliberately did not test: the prompt itself, and LiveKit's audio pipeline. Prompt behaviour is not stable enough to assert on in a unit test, and testing LiveKit would be testing LiveKit. The seam I *can* pin down — every tool call and everything downstream of it — is covered.
 
 ---
@@ -127,6 +140,8 @@ What I deliberately did not test: the prompt itself, and LiveKit's audio pipelin
 - **Timezone is the server's local time.** "Today" and "this morning" are computed with local `Date` boundaries, which is correct when the server runs in the user's timezone and wrong otherwise. The fix is storing a timezone per user and doing day maths with `Intl` — a real change, not a config flag, so I left it honest rather than half-done.
 - **Relative time is coarse.** "Yesterday's dinner" is not parsed; the agent only edits and deletes within today. `GET /api/meals?date=` already supports any day, so this is a prompt-and-tool gap, not a data one.
 - **Ambiguous *entries* still need a human question.** If you logged the same dish twice in one meal and say "remove the dal", the agent asks which one rather than picking. Correct, but clunkier than a product would ship.
+- **The quote under an edited entry is stale.** `spokenAs` records the words that *created* the entry, and `update_meal` doesn't send new wording — so after "make that three rotis" the page shows `3 × piece` under the quote "two rotis". The numbers are right; the quote is history. Either update it on edit or label it "originally said".
+- **The live-sync fix is dev-only.** It lives in the Vite proxy. A production build served behind a different proxy (nginx, a PaaS router) needs the same "close the client when upstream dies" behaviour checked there.
 - **Deletes are hard deletes.** A soft-delete flag would let "undo that" work, which is an obvious next thing a voice product wants.
 - **One agent, one room.** No load testing, no multi-region, no reconnect story beyond LiveKit's own.
 - **The embedded mongod is a convenience, not a deployment.** It exists so this repo runs on a clean machine in one command. Anything real sets `MONGODB_URI`.
